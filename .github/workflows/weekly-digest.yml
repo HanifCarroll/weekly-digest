@@ -4,8 +4,8 @@ name: Weekly Digest
 # Define when the workflow should run
 on:
   schedule:
-    - cron: '0 9 * * 0'  # Runs at 9 AM every Sunday
-  workflow_dispatch:  # Allows manual triggering of the workflow
+    - cron: '0 9 * * 0' # Runs at 9 AM every Sunday
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 # Environment variables used across the workflow
 env:
@@ -18,60 +18,64 @@ env:
 # Define the jobs to be run
 jobs:
   send-digest:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
     steps:
-    # Step 1: Check out the repository code
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Step 1: Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Step 2: Set up Bun runtime
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest  
+      # Step 2: Set up Bun runtime
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
 
-    # Step 3: Install project dependencies
-    - name: Install dependencies
-      run: bun install
+      # Step 3: Install project dependencies
+      - name: Install dependencies
+        run: bun install
 
-    # Step 4: Run the weekly digest script
-    - name: Run script
-      id: run_script
-      run: |
-        output=$(bun run script.ts 2>&1)  # Capture both stdout and stderr
-        exit_code=$?  # Capture the exit code
-        # Set output variables for use in later steps
-        echo "script_output=$output" >> $GITHUB_OUTPUT
-        echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
-      continue-on-error: true  # Continue workflow execution even if this step fails
+      # Step 4: Install playwright dependencies
+      - name: Install playwright
+        run: bunx playwright install
 
-    # Step 5: Send email notification for successful execution
-    - name: Send success email notification
-      if: steps.run_script.outputs.exit_code == 0  # Only run if script succeeded
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: ${{ env.EMAIL_SERVER }}
-        server_port: ${{ env.EMAIL_PORT }}
-        username: ${{ env.EMAIL_USER }}
-        password: ${{ env.EMAIL_PASS }}
-        subject: Weekly Digest Script Succeeded
-        body: The weekly digest script ran successfully.
-        to: ${{ env.EMAIL_RECIPIENT }}
-        from: GitHub Actions
+      # Step 5: Run the weekly digest script
+      - name: Run script
+        id: run_script
+        run: |
+          output=$(bun run script.ts 2>&1)  # Capture both stdout and stderr
+          exit_code=$?  # Capture the exit code
+          # Set output variables for use in later steps
+          echo "script_output=$output" >> $GITHUB_OUTPUT
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+        continue-on-error: true # Continue workflow execution even if this step fails
 
-    # Step 6: Send email notification for failed execution
-    - name: Send failure email notification
-      if: steps.run_script.outputs.exit_code != 0  # Only run if script failed
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: ${{ env.EMAIL_SERVER }}
-        server_port: ${{ env.EMAIL_PORT }}
-        username: ${{ env.EMAIL_USER }}
-        password: ${{ env.EMAIL_PASS }}
-        subject: Weekly Digest Script Failed
-        body: |
-          The weekly digest script failed to run successfully. 
-          Error output:
-          ${{ steps.run_script.outputs.script_output }}
-        to: ${{ env.EMAIL_RECIPIENT }}
-        from: GitHub Actions
+      # Step 6: Send email notification for successful execution
+      - name: Send success email notification
+        if: steps.run_script.outputs.exit_code == 0 # Only run if script succeeded
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ env.EMAIL_SERVER }}
+          server_port: ${{ env.EMAIL_PORT }}
+          username: ${{ env.EMAIL_USER }}
+          password: ${{ env.EMAIL_PASS }}
+          subject: Weekly Digest Script Succeeded
+          body: The weekly digest script ran successfully.
+          to: ${{ env.EMAIL_RECIPIENT }}
+          from: GitHub Actions
+
+      # Step 7: Send email notification for failed execution
+      - name: Send failure email notification
+        if: steps.run_script.outputs.exit_code != 0 # Only run if script failed
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ env.EMAIL_SERVER }}
+          server_port: ${{ env.EMAIL_PORT }}
+          username: ${{ env.EMAIL_USER }}
+          password: ${{ env.EMAIL_PASS }}
+          subject: Weekly Digest Script Failed
+          body: |
+            The weekly digest script failed to run successfully. 
+            Error output:
+            ${{ steps.run_script.outputs.script_output }}
+          to: ${{ env.EMAIL_RECIPIENT }}
+          from: GitHub Actions
