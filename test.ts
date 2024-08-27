@@ -9,26 +9,15 @@ async function saveOutputToFile(content: string) {
 }
 
 async function runWeeklyTopPostsTest() {
-  let browser: Browser | null = null;
   try {
-    browser = await chromium.launch({
-      headless: false,
-    });
-    const page = await browser.newPage();
-
     // Generate the HTML content
-    const emailContent = await generateWeeklyTopPostsHTML(page);
+    const emailContent = await generateWeeklyTopPostsHTML();
 
-    // Save output to file
     await saveOutputToFile(emailContent);
-    console.log('Test run completed successfully');
+    console.log('Test run completed successfully. Output saved to file.');
   } catch (error) {
     console.error('Error running weekly top posts script:', error);
     throw error;
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 }
 
