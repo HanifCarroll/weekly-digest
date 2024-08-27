@@ -332,6 +332,7 @@ async function runWeeklyTopPosts() {
 }
 
 // Only run the script if this file is being executed directly
+// @ts-ignore
 if (import.meta.main) {
   runWeeklyTopPosts().catch((error) => {
     console.error('Script failed:', error);
