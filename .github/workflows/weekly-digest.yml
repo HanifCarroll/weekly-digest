@@ -42,10 +42,11 @@ jobs:
       - name: Run script
         id: run_script
         run: |
-          output=$(bun run script.ts 2>&1)  # Capture both stdout and stderr
-          exit_code=$?  # Capture the exit code
-          # Set output variables for use in later steps
-          echo "script_output=$output" >> $GITHUB_OUTPUT
+          output=$(bun run script.ts 2>&1)
+          exit_code=$?
+          echo "script_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$output" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         continue-on-error: true # Continue workflow execution even if this step fails
 

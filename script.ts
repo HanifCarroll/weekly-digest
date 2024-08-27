@@ -32,7 +32,9 @@ async function getTopPostsOfTheWeekForSubreddit(
     );
 
     // Wait for a specific element that indicates the content has loaded
-    await page.waitForSelector('div[data-context="listing"]', { timeout: 30000 });
+    await page.waitForSelector('div[data-context="listing"]', {
+      timeout: 10000,
+    });
 
     // Add a delay after each request
     await page.waitForTimeout(5000); // 5 seconds delay
@@ -318,7 +320,11 @@ async function runWeeklyTopPosts() {
   try {
     browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
     });
     const page = await browser.newPage();
 
