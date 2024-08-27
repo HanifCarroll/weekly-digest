@@ -25,14 +25,19 @@ async function getTopPostsOfTheWeekForSubreddit(
   limit: number = 25
 ): Promise<Post[]> {
   try {
+    console.log(`Fetching posts for /r/${subredditName}`);
     await page.goto(
       `https://old.reddit.com/r/${subredditName}/top/?sort=top&t=week`,
       { waitUntil: 'networkidle' }
     );
 
-    // Add a delay after each request
-    await page.waitForTimeout(2000); // 2 seconds delay
+    // Wait for a specific element that indicates the content has loaded
+    await page.waitForSelector('div[data-context="listing"]', { timeout: 30000 });
 
+    // Add a delay after each request
+    await page.waitForTimeout(5000); // 5 seconds delay
+
+    console.log(`Evaluating page for /r/${subredditName}`);
     const posts: (Post | null)[] = await page.evaluate((limit) => {
       const postElements = Array.from(
         document.querySelectorAll('div[data-context="listing"]')
@@ -70,6 +75,7 @@ async function getTopPostsOfTheWeekForSubreddit(
         };
       });
     }, limit);
+    console.log(`Found ${posts.length} posts for /r/${subredditName}`);
 
     return posts
       .filter((post) => post !== null)
@@ -311,7 +317,8 @@ async function runWeeklyTopPosts() {
   let browser: Browser | null = null;
   try {
     browser = await chromium.launch({
-      headless: true, // Change to true for GitHub Actions, false for local testing
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
     const page = await browser.newPage();
 

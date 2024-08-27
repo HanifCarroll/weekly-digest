@@ -49,21 +49,7 @@ jobs:
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         continue-on-error: true # Continue workflow execution even if this step fails
 
-      # Step 6: Send email notification for successful execution
-      - name: Send success email notification
-        if: steps.run_script.outputs.exit_code == 0 # Only run if script succeeded
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ env.EMAIL_SERVER }}
-          server_port: ${{ env.EMAIL_PORT }}
-          username: ${{ env.EMAIL_USER }}
-          password: ${{ env.EMAIL_PASS }}
-          subject: Weekly Digest Script Succeeded
-          body: The weekly digest script ran successfully.
-          to: ${{ env.EMAIL_RECIPIENT }}
-          from: GitHub Actions
-
-      # Step 7: Send email notification for failed execution
+      # Step 6: Send email notification for failed execution
       - name: Send failure email notification
         if: steps.run_script.outputs.exit_code != 0 # Only run if script failed
         uses: dawidd6/action-send-mail@v3
