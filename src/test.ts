@@ -1,6 +1,5 @@
 import { writeFile } from 'fs/promises';
-import { chromium, Browser } from 'playwright';
-import { generateWeeklyTopPostsHTML } from './src/script';
+import { generateWeeklyTopPostsHTML } from './main';
 
 async function saveOutputToFile(content: string) {
   const filename = `weekly_digest_test_${new Date().toISOString().split('T')[0]}.html`;

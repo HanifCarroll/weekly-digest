@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "start": "bun run script.ts",
+    "start": "bun run src/main.ts",
+    "test": "bun run src/test.ts",
+    "test-auth": "bun run src/auth-test.ts",
     "lint": "eslint . --ext .js,.ts,.json,.yaml,.yml",
     "format": "prettier --write \"**/*.{js,ts,json,yaml,yml}\""
   },

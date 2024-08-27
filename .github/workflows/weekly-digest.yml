@@ -48,7 +48,7 @@ jobs:
         id: run_script
         run: |
           set -o pipefail
-          bun run script.ts 2>&1 | tee output.log
+          npm run start 2>&1 | tee output.log
           exit_code=${PIPESTATUS[0]}
           echo "script_output<<EOF" >> $GITHUB_OUTPUT
           cat output.log >> $GITHUB_OUTPUT
