@@ -25,13 +25,13 @@ async function getTopPostsOfTheWeekForSubreddit(
   limit: number = 25
 ): Promise<Post[]> {
   try {
-    // Add a delay before each request
-    await page.waitForTimeout(2000); // 2 seconds delay
-
     await page.goto(
       `https://old.reddit.com/r/${subredditName}/top/?sort=top&t=week`,
       { waitUntil: 'networkidle' }
     );
+
+    // Add a delay after each request
+    await page.waitForTimeout(2000); // 2 seconds delay
 
     const posts: (Post | null)[] = await page.evaluate((limit) => {
       const postElements = Array.from(
