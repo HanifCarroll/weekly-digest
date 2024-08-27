@@ -101,26 +101,64 @@ async function getTopPostsOfTheWeekForSubreddit(
   }
 }
 
+async function getRedditOAuthToken(): Promise<string> {
+  const clientId = process.env.REDDIT_CLIENT_ID;
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+  const username = process.env.REDDIT_USERNAME;
+  const password = process.env.REDDIT_PASSWORD;
+  const userAgent = process.env.REDDIT_USER_AGENT;
+
+  if (!clientId || !clientSecret || !username || !password) {
+    throw new Error('Missing Reddit API credentials');
+  }
+
+  const auth = btoa(`${clientId}:${clientSecret}`);
+  const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': userAgent || 'WeeklyTopPosts/1.0 by YourUsername'
+    },
+    body: new URLSearchParams({
+      grant_type: 'password',
+      username,
+      password
+    })
+  });
+
+  const data = await response.json();
+  if (!data.access_token) {
+    throw new Error('Failed to obtain Reddit OAuth token');
+  }
+
+  return data.access_token;
+}
+
 async function getTopPostsOfTheWeekForSubredditAPI(
-  page: Page,
   subredditName: string,
   limit: number = 25
 ): Promise<Post[]> {
   try {
     console.log(`Fetching posts for /r/${subredditName} using API`);
-    const apiUrl = `https://old.reddit.com/r/${subredditName}/top.json?t=week&limit=${limit}`;
+    const token = await getRedditOAuthToken();
+    const apiUrl = `https://oauth.reddit.com/r/${subredditName}/top?t=week&limit=${limit}`;
 
-    const response = await page.evaluate(async (url) => {
-      const res = await fetch(url);
-      return res.json();
-    }, apiUrl);
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `bearer ${token}`,
+        'User-Agent': process.env.REDDIT_USER_AGENT || 'WeeklyTopPosts/1.0 by YourUsername'
+      }
+    });
 
-    if (!response.data || !response.data.children) {
+    const data = await response.json();
+
+    if (!data.data || !data.data.children) {
       console.error(`Invalid response for /r/${subredditName}`);
       return [];
     }
 
-    const posts: Post[] = response.data.children
+    const posts: Post[] = data.data.children
       .map((child: any) => {
         const post = child.data;
         return {
@@ -331,7 +369,7 @@ async function sendEmail(subject: string, content: string) {
 }
 
 // New function to generate the complete HTML document
-async function generateWeeklyTopPostsHTML(page: Page): Promise<string> {
+async function generateWeeklyTopPostsHTML(): Promise<string> {
   let emailContent = `
     <html>
       <head>
@@ -346,15 +384,25 @@ async function generateWeeklyTopPostsHTML(page: Page): Promise<string> {
 
   // Get top posts from subreddits
   for (const subreddit of SUBREDDITS) {
-    const posts = await getTopPostsOfTheWeekForSubredditAPI(page, subreddit);
+    const posts = await getTopPostsOfTheWeekForSubredditAPI(subreddit);
     emailContent += formatRedditPosts(subreddit, posts);
   }
 
   // Get top posts from Hacker News
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+    ],
+  });
+  const page = await browser.newPage();
   const hnPostsGroupedByDay = await getTopPostsOfTheWeekForHackerNews(
     page,
     HckrNewsPostFilter.Top10
   );
+  await browser.close();
   emailContent += formatHackerNewsPosts(hnPostsGroupedByDay);
 
   emailContent += `
@@ -367,20 +415,9 @@ async function generateWeeklyTopPostsHTML(page: Page): Promise<string> {
 
 // Main function to run the script
 async function runWeeklyTopPosts() {
-  let browser: Browser | null = null;
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-      ],
-    });
-    const page = await browser.newPage();
-
     // Generate the HTML content
-    const emailContent = await generateWeeklyTopPostsHTML(page);
+    const emailContent = await generateWeeklyTopPostsHTML();
 
     // Send email
     await sendEmail('Weekly Top Posts', emailContent);
@@ -388,10 +425,6 @@ async function runWeeklyTopPosts() {
   } catch (error) {
     console.error('Error running weekly top posts script:', error);
     throw error;
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 }
 
