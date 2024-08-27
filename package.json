@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "bun run index.ts",
+    "start": "bun run script.ts",
     "lint": "eslint . --ext .js,.ts,.json,.yaml,.yml",
     "format": "prettier --write \"**/*.{js,ts,json,yaml,yml}\""
   },
