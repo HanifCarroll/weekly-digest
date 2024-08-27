@@ -8,6 +8,7 @@ This script aggregates top posts from various subreddits and Hacker News, then s
 - Fetches top posts from Hacker News
 - Generates an HTML email with formatted content
 - Sends the digest via email
+- Supports testing and local output generation
 
 ## Prerequisites
 
@@ -18,13 +19,19 @@ This script aggregates top posts from various subreddits and Hacker News, then s
 1. Clone the repository
 
    ```bash
-   git clone https://github.com/your-username/weekly-digest.git
+   git clone https://github.com/hanifcarroll/weekly-digest.git
    ```
 
 2. Install dependencies:
 
    ```bash
    bun install
+   ```
+
+3. Install Playwright dependencies:
+
+   ```bash
+   bunx playwright install chromium
    ```
 
 ## Configuration
@@ -36,8 +43,11 @@ Set the following environment variables:
 - `EMAIL_USER`: Your email address
 - `EMAIL_PASS`: Your email password
 - `EMAIL_RECIPIENT`: Recipient's email address
-
-## Usage
+- `REDDIT_CLIENT_ID`: Reddit API client ID
+- `REDDIT_CLIENT_SECRET`: Reddit API client secret
+- `REDDIT_USERNAME`: Reddit username
+- `REDDIT_PASSWORD`: Reddit password
+- `REDDIT_USER_AGENT`: Reddit API user agent## Usage
 
 Run the script:
 
@@ -58,7 +68,7 @@ Remember to set the environment variables in the GitHub Actions workflow setting
 
 ## Testing
 
-To run tests:
+To run tests and generate local HTML output:
 
 ```bash
 bun run test.ts
