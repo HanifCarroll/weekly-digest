@@ -114,7 +114,6 @@ async function getRedditOAuthToken(): Promise<string> {
   const username = process.env.REDDIT_USERNAME;
   const password = process.env.REDDIT_PASSWORD;
   const userAgent = process.env.REDDIT_USER_AGENT;
-  console.log('process', process.env);
 
   if (!clientId || !clientSecret || !username || !password || !userAgent) {
     throw new Error('Missing Reddit API credentials');
