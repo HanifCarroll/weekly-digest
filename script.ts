@@ -101,6 +101,49 @@ async function getTopPostsOfTheWeekForSubreddit(
   }
 }
 
+async function getTopPostsOfTheWeekForSubredditAPI(
+  page: Page,
+  subredditName: string,
+  limit: number = 25
+): Promise<Post[]> {
+  try {
+    console.log(`Fetching posts for /r/${subredditName} using API`);
+    const apiUrl = `https://old.reddit.com/r/${subredditName}/top.json?t=week&limit=${limit}`;
+
+    const response = await page.evaluate(async (url) => {
+      const res = await fetch(url);
+      return res.json();
+    }, apiUrl);
+
+    if (!response.data || !response.data.children) {
+      console.error(`Invalid response for /r/${subredditName}`);
+      return [];
+    }
+
+    const posts: Post[] = response.data.children
+      .map((child: any) => {
+        const post = child.data;
+        return {
+          title: post.title,
+          url: post.url,
+          numberOfUpvotes: post.ups,
+          numberOfComments: post.num_comments,
+        };
+      })
+      .filter((post: Post) => post.title && post.url);
+
+    console.log(`Found ${posts.length} posts for /r/${subredditName}`);
+
+    return posts;
+  } catch (error) {
+    console.error(
+      `Error fetching posts for /r/${subredditName} using API:`,
+      error
+    );
+    return [];
+  }
+}
+
 async function getTopPostsOfTheWeekForHackerNews(
   page: Page,
   limitPerDay: HckrNewsPostFilter = HckrNewsPostFilter.Top10
@@ -303,7 +346,7 @@ async function generateWeeklyTopPostsHTML(page: Page): Promise<string> {
 
   // Get top posts from subreddits
   for (const subreddit of SUBREDDITS) {
-    const posts = await getTopPostsOfTheWeekForSubreddit(page, subreddit);
+    const posts = await getTopPostsOfTheWeekForSubredditAPI(page, subreddit);
     emailContent += formatRedditPosts(subreddit, posts);
   }
 
@@ -369,4 +412,5 @@ export {
   formatHackerNewsPosts,
   HckrNewsPostFilter,
   SUBREDDITS,
+  getTopPostsOfTheWeekForSubredditAPI,
 };
