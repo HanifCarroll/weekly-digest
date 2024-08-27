@@ -36,7 +36,7 @@ jobs:
 
       # Step 4: Install playwright dependencies
       - name: Install playwright
-        run: bunx playwright install
+        run: bunx playwright install chromium
 
       # Step 5: Run the weekly digest script
       - name: Run script
