@@ -31,9 +31,17 @@ async function getTopPostsOfTheWeekForSubreddit(
       { waitUntil: 'networkidle' }
     );
 
+    // Log the current URL
+    console.log(`Current URL: ${page.url()}`);
+
+    // Log the page content
+    const pageContent = await page.content();
+    console.log(`Page content for /r/${subredditName}:`);
+    console.log(pageContent);
+
     // Wait for a specific element that indicates the content has loaded
     await page.waitForSelector('div[data-context="listing"]', {
-      timeout: 10000,
+      timeout: 5000,
     });
 
     // Add a delay after each request
